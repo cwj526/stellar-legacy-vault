@@ -12,16 +12,20 @@
     --cosmos-night: 225 15% 12%;
     --cosmos-space: 225 12% 18%;
     
-    /* 星光色调 */
+    /* 科技星光色调 */
     --starlight-gold: 45 90% 75%;
     --starlight-warm: 35 85% 65%;
     --starlight-bright: 50 95% 85%;
     --starlight-dim: 45 60% 55%;
+    --tech-cyan: 195 100% 70%;
+    --tech-neon: 180 100% 60%;
     
-    /* 星云色调 */
+    /* 科技星云色调 */
     --nebula-purple: 270 65% 45%;
     --nebula-blue: 240 55% 55%;
     --nebula-violet: 280 50% 60%;
+    --tech-grid: 200 80% 40%;
+    --hologram-blue: 220 90% 60%;
     
     /* 基础系统色调 */
     --background: var(--cosmos-deep);
@@ -49,11 +53,13 @@
     --destructive: 0 75% 60%;
     --destructive-foreground: 0 0% 95%;
     
-    /* 宇宙渐变 */
+    /* 科技宇宙渐变 */
     --gradient-cosmos: linear-gradient(135deg, hsl(var(--cosmos-deep)), hsl(var(--cosmos-dark)));
     --gradient-starlight: linear-gradient(45deg, hsl(var(--starlight-gold)), hsl(var(--starlight-warm)));
     --gradient-nebula: linear-gradient(120deg, hsl(var(--nebula-purple)), hsl(var(--nebula-blue)));
     --gradient-stellar: radial-gradient(ellipse at center, hsl(var(--starlight-gold) / 0.3), transparent 70%);
+    --gradient-tech: linear-gradient(45deg, hsl(var(--tech-cyan) / 0.3), hsl(var(--hologram-blue) / 0.2));
+    --gradient-hologram: conic-gradient(from 0deg, hsl(var(--tech-cyan) / 0.4), hsl(var(--nebula-blue) / 0.3), hsl(var(--tech-neon) / 0.4));
     
     /* 阴影与光晕 */
     --shadow-cosmic: 0 8px 32px hsl(var(--cosmos-deep) / 0.8);
@@ -79,7 +85,7 @@
     font-family: 'Inter', 'Noto Sans SC', sans-serif;
   }
   
-  /* 宇宙粒子背景 */
+  /* 科技宇宙粒子背景 */
   .cosmic-bg {
     position: fixed;
     top: 0;
@@ -89,15 +95,17 @@
     pointer-events: none;
     z-index: -1;
     background: 
-      radial-gradient(2px 2px at 20px 30px, hsl(var(--starlight-dim)), transparent),
+      radial-gradient(2px 2px at 20px 30px, hsl(var(--tech-cyan)), transparent),
       radial-gradient(2px 2px at 40px 70px, hsl(var(--starlight-bright)), transparent),
-      radial-gradient(1px 1px at 90px 40px, hsl(var(--starlight-gold)), transparent),
-      radial-gradient(1px 1px at 130px 80px, hsl(var(--starlight-warm)), transparent),
+      radial-gradient(1px 1px at 90px 40px, hsl(var(--hologram-blue)), transparent),
+      radial-gradient(1px 1px at 130px 80px, hsl(var(--tech-neon)), transparent),
       radial-gradient(2px 2px at 160px 30px, hsl(var(--starlight-dim)), transparent),
+      linear-gradient(0deg, hsl(var(--tech-grid) / 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--tech-grid) / 0.1) 1px, transparent 1px),
       var(--gradient-cosmos);
     background-repeat: repeat;
-    background-size: 200px 100px;
-    animation: starfield 20s linear infinite;
+    background-size: 200px 100px, 200px 100px, 200px 100px, 200px 100px, 200px 100px, 50px 50px, 50px 50px, 100% 100%;
+    animation: starfield 20s linear infinite, techGrid 15s linear infinite;
   }
   
   @keyframes starfield {
@@ -106,6 +114,15 @@
     }
     to {
       transform: translateY(-100px);
+    }
+  }
+  
+  @keyframes techGrid {
+    from {
+      background-position: 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px;
+    }
+    to {
+      background-position: 0px -100px, 0px -100px, 0px -100px, 0px -100px, 0px -100px, 50px 50px, 50px 50px, 0px 0px;
     }
   }
   

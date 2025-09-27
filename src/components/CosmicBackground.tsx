@@ -64,21 +64,48 @@ export const CosmicBackground = () => {
         ctx.save();
         ctx.globalAlpha = particle.brightness;
         
-        // 星光效果
+        // 科技星光效果
         const gradient = ctx.createRadialGradient(
           particle.x, particle.y, 0,
-          particle.x, particle.y, particle.size * 3
+          particle.x, particle.y, particle.size * 4
         );
-        gradient.addColorStop(0, 'hsl(45, 90%, 75%)');
+        
+        // 随机选择科技色彩
+        const colors = [
+          'hsl(195, 100%, 70%)', // tech-cyan
+          'hsl(45, 90%, 75%)',   // starlight-gold
+          'hsl(220, 90%, 60%)',  // hologram-blue
+          'hsl(180, 100%, 60%)'  // tech-neon
+        ];
+        const color = colors[Math.floor(particle.x + particle.y) % colors.length];
+        
+        gradient.addColorStop(0, color);
+        gradient.addColorStop(0.7, color.replace('70%', '40%'));
         gradient.addColorStop(1, 'transparent');
         
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size * 3, 0, Math.PI * 2);
+        ctx.arc(particle.x, particle.y, particle.size * 4, 0, Math.PI * 2);
         ctx.fill();
         
+        // 科技十字光芒
+        if (particle.brightness > 0.7) {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 0.5;
+          ctx.globalAlpha = particle.brightness * 0.5;
+          
+          ctx.beginPath();
+          ctx.moveTo(particle.x - particle.size * 2, particle.y);
+          ctx.lineTo(particle.x + particle.size * 2, particle.y);
+          ctx.moveTo(particle.x, particle.y - particle.size * 2);
+          ctx.lineTo(particle.x, particle.y + particle.size * 2);
+          ctx.stroke();
+          
+          ctx.globalAlpha = particle.brightness;
+        }
+        
         // 中心星点
-        ctx.fillStyle = 'hsl(45, 90%, 85%)';
+        ctx.fillStyle = color;
         ctx.beginPath();
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         ctx.fill();
