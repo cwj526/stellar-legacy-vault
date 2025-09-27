@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Sparkles, Upload, Zap } from 'lucide-react';
+import { shortenAddress } from '@/lib/utils';
+import type { MintedLifeFragment } from '@/hooks/use-life-fragment-nft';
 
 interface LifeFragment {
   id: string;
@@ -21,10 +24,25 @@ interface LifeFragment {
   isUnlocked: boolean;
 }
 
+export type MintingAdapter = {
+  account: string | null;
+  isConnecting: boolean;
+  isMinting: boolean;
+  providerAvailable: boolean;
+  walletError: string | null;
+  mintError: string | null;
+  connectWallet: () => Promise<string | void>;
+  mintOnChain: (
+    text: string,
+    onProgress?: (progress: { progress: number; message: string }) => void
+  ) => Promise<MintedLifeFragment>;
+};
+
 interface CreateFragmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (fragment: Omit<LifeFragment, 'id' | 'hash' | 'createdAt' | 'isUnlocked'>) => void;
+  minting?: MintingAdapter;
 }
 
 type FormDataType = {
@@ -36,7 +54,7 @@ type FormDataType = {
   unlockValue: string;
 };
 
-export const CreateFragmentModal = ({ isOpen, onClose, onSave }: CreateFragmentModalProps) => {
+export const CreateFragmentModal = ({ isOpen, onClose, onSave, minting }: CreateFragmentModalProps) => {
   const [formData, setFormData] = useState<FormDataType>({
     title: '',
     type: '文本',
@@ -46,7 +64,18 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave }: CreateFragmentM
     unlockValue: '',
   });
   const [mintingProgress, setMintingProgress] = useState(0);
-  const [isMinting, setIsMinting] = useState(false);
+  const [progressMessage, setProgressMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [shouldMint, setShouldMint] = useState(false);
+
+  const isBusy = isSubmitting || Boolean(minting?.isMinting);
+
+  useEffect(() => {
+    if (!shouldMint) {
+      setMintingProgress(0);
+      setProgressMessage('');
+    }
+  }, [shouldMint]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,41 +84,53 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave }: CreateFragmentM
       return;
     }
 
-    setIsMinting(true);
-    setMintingProgress(0);
-
-    // 模拟铸造过程
-    const mintingSteps = [
-      { progress: 20, message: '正在验证内容...' },
-      { progress: 40, message: '生成加密哈希...' },
-      { progress: 60, message: '创建智能合约...' },
-      { progress: 80, message: '上链铸造中...' },
-      { progress: 100, message: '铸造完成！' },
-    ];
-
-    for (const step of mintingSteps) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setMintingProgress(step.progress);
+    if (shouldMint && !minting) {
+      alert('未加载 NFT 铸造功能，请稍后重试。');
+      return;
     }
 
-    onSave(formData);
-    
-    // 重置表单
-    setFormData({
-      title: '',
-      type: '文本',
-      content: '',
-      visibility: '锁定',
-      unlockCondition: '时间',
-      unlockValue: '',
-    });
-    setMintingProgress(0);
-    setIsMinting(false);
-    onClose();
+    try {
+      setIsSubmitting(true);
+      setMintingProgress(0);
+      setProgressMessage('');
+
+      if (shouldMint && minting) {
+        if (!minting.providerAvailable || !minting.account) {
+          setMintingProgress(10);
+          setProgressMessage('请求连接钱包...');
+          await minting.connectWallet();
+        }
+
+        await minting.mintOnChain(formData.content, ({ progress, message }) => {
+          setMintingProgress(progress);
+          setProgressMessage(message);
+        });
+      }
+
+      onSave(formData);
+
+      setFormData({
+        title: '',
+        type: '文本',
+        content: '',
+        visibility: '锁定',
+        unlockCondition: '时间',
+        unlockValue: '',
+      });
+      setMintingProgress(0);
+      setProgressMessage('');
+      setShouldMint(false);
+      onClose();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '操作失败，请稍后再试。';
+      alert(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
-    if (!isMinting) {
+    if (!isBusy) {
       onClose();
     }
   };
@@ -114,7 +155,7 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave }: CreateFragmentM
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="为你的记忆起个名字..."
                 className="bg-input/50"
-                disabled={isMinting}
+                disabled={isBusy}
               />
             </div>
             
@@ -125,7 +166,7 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave }: CreateFragmentM
                 onValueChange={(value) => 
                   setFormData({ ...formData, type: value as '文本' | '图片' | '音频' | '视频' })
                 }
-                disabled={isMinting}
+                disabled={isBusy}
               >
                 <SelectTrigger className="bg-input/50">
                   <SelectValue />
@@ -150,7 +191,7 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave }: CreateFragmentM
                 placeholder="写下你想要保存的记忆、想法或感悟..."
                 rows={4}
                 className="bg-input/50"
-                disabled={isMinting}
+                disabled={isBusy}
               />
             ) : (
               <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
@@ -163,7 +204,7 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave }: CreateFragmentM
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                   placeholder="输入文件描述或占位内容..."
                   className="bg-input/50"
-                  disabled={isMinting}
+                  disabled={isBusy}
                 />
               </div>
             )}
@@ -177,7 +218,7 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave }: CreateFragmentM
                 onValueChange={(value) => 
                   setFormData({ ...formData, visibility: value as '私密' | '锁定' | '公开' })
                 }
-                disabled={isMinting}
+                disabled={isBusy}
               >
                 <SelectTrigger className="bg-input/50">
                   <SelectValue />
@@ -197,7 +238,7 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave }: CreateFragmentM
                 onValueChange={(value) => 
                   setFormData({ ...formData, unlockCondition: value as '时间' | '口令' | '见证者签名' })
                 }
-                disabled={isMinting || formData.visibility === '公开'}
+                disabled={isBusy || formData.visibility === '公开'}
               >
                 <SelectTrigger className="bg-input/50">
                   <SelectValue />
@@ -221,23 +262,78 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave }: CreateFragmentM
                 onChange={(e) => setFormData({ ...formData, unlockValue: e.target.value })}
                 placeholder="设置解锁这个碎片的口令..."
                 className="bg-input/50"
-                disabled={isMinting}
+                disabled={isBusy}
               />
               <p className="text-xs text-muted-foreground">
-                演示提示：可使用 "星辰永恒" 作为通用解锁口令
+                演示提示：可使用 "123" 作为通用解锁口令
               </p>
             </div>
           )}
 
-          {isMinting && (
+          <div className="space-y-3 rounded-lg border border-border/40 bg-muted/10 p-4">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="shouldMint"
+                checked={shouldMint}
+                onCheckedChange={(checked) => setShouldMint(Boolean(checked))}
+                disabled={isBusy}
+              />
+              <div className="space-y-1">
+                <label htmlFor="shouldMint" className="text-sm font-medium text-foreground">
+                  是否铸造为 NFT
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  勾选后会调用浏览器钱包，将内容通过智能合约铸造成 ERC-721 NFT，并在本地记录交易信息。
+                </p>
+              </div>
+            </div>
+
+            {shouldMint && minting && (
+              <div className="flex flex-col gap-2 text-xs text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span>钱包状态：</span>
+                  <span className="font-mono text-foreground">
+                    {minting.account ? shortenAddress(minting.account) : '未连接'}
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      minting
+                        .connectWallet()
+                        .catch((error) =>
+                          alert(error instanceof Error ? error.message : '连接钱包失败，请稍后再试。')
+                        )
+                    }
+                    disabled={isBusy || minting.isConnecting}
+                  >
+                    {minting.isConnecting ? '连接中...' : minting.account ? '重新连接' : '连接钱包'}
+                  </Button>
+                </div>
+                {minting.walletError && (
+                  <p className="text-destructive">{minting.walletError}</p>
+                )}
+                {minting.mintError && (
+                  <p className="text-destructive">{minting.mintError}</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {shouldMint && (mintingProgress > 0 || minting?.isMinting) && (
             <div className="space-y-4 p-4 rounded-lg bg-muted/20">
               <div className="flex items-center gap-2 text-starlight">
                 <Zap className="w-5 h-5 animate-pulse" />
-                <span className="font-medium">正在铸造生命碎片...</span>
+                <span className="font-medium">
+                  {progressMessage || '正在铸造生命碎片...'}
+                </span>
               </div>
               <Progress value={mintingProgress} className="h-2" />
               <p className="text-sm text-muted-foreground text-center">
-                {mintingProgress < 100 ? '请勿关闭窗口，铸造过程中...' : '铸造完成！碎片已加入星图'}
+                {mintingProgress < 100
+                  ? '请在钱包中确认后等待链上交易完成。'
+                  : '铸造完成！碎片信息已保存至本地。'}
               </p>
             </div>
           )}
@@ -248,22 +344,22 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave }: CreateFragmentM
               variant="outline"
               onClick={handleClose}
               className="flex-1"
-              disabled={isMinting}
+              disabled={isBusy}
             >
               取消
             </Button>
             <Button
               type="submit"
               className="flex-1 btn-cosmic"
-              disabled={isMinting}
+              disabled={isBusy}
             >
-              {isMinting ? '铸造中...' : '铸造碎片'}
+              {isBusy ? '处理中...' : shouldMint ? '铸造碎片' : '保存碎片'}
             </Button>
           </div>
         </form>
 
         <div className="text-xs text-muted-foreground text-center pt-2 border-t border-border/30">
-          ⚠️ 当前为演示版本，所有"上链/铸造"流程均为模拟，不涉及真实区块链交互
+          ⚠️ 铸造功能会发起链上交易，请确认已切换至正确的网络环境并确保 Gas 余额充足。
         </div>
       </DialogContent>
     </Dialog>

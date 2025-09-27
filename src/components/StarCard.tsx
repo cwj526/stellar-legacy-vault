@@ -47,7 +47,7 @@ export const StarCard = ({ fragment, onUnlock }: StarCardProps) => {
 
   const handleUnlock = () => {
     if (fragment.unlockCondition === '口令') {
-      if (unlockInput === '星辰永恒' || unlockInput === fragment.unlockValue) {
+      if (unlockInput === '123' || unlockInput === fragment.unlockValue) {
         onUnlock(fragment.id);
         setShowUnlockInput(false);
         setUnlockInput('');

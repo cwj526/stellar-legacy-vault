@@ -7,7 +7,10 @@ interface NavigationProps {
   activeSection: string;
 }
 
-export const Navigation = ({ onSectionClick, activeSection }: NavigationProps) => {
+export const Navigation = ({
+  onSectionClick,
+  activeSection,
+}: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -32,7 +35,7 @@ export const Navigation = ({ onSectionClick, activeSection }: NavigationProps) =
             <div className="w-8 h-8 rounded-full bg-gradient-to-r from-starlight-gold to-nebula-purple flex items-center justify-center">
               <Star className="w-5 h-5 text-white" />
             </div>
-            <span className="text-lg font-bold text-starlight">IO数字生命档案馆</span>
+            <span className="text-lg font-bold text-starlight">数字生命档案馆</span>
           </div>
 
           {/* Desktop Navigation */}

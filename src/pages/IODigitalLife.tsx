@@ -1,12 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Navigation } from '@/components/Navigation';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { StarCard } from '@/components/StarCard';
-import { CreateFragmentModal } from '@/components/CreateFragmentModal';
+import { CreateFragmentModal, type MintingAdapter } from '@/components/CreateFragmentModal';
+import { MintedFragmentGallery } from '@/components/MintedFragmentGallery';
 import { FusionView } from '@/components/FusionView';
+import { useLifeFragmentNftMinting } from '@/hooks/use-life-fragment-nft';
+import { useToast } from '@/components/ui/use-toast';
+import { shortenAddress } from '@/lib/utils';
 import { 
   Star, 
   Sparkles, 
@@ -21,7 +25,9 @@ import {
   Database,
   Shield,
   Network,
-  Monitor
+  Monitor,
+  Wallet,
+  Check
 } from 'lucide-react';
 import cosmicBg from '@/assets/cosmic-background.jpg';
 
@@ -43,6 +49,28 @@ const IODigitalLife = () => {
   const [fragments, setFragments] = useState<LifeFragment[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
+  const nftMinting = useLifeFragmentNftMinting();
+  const { toast } = useToast();
+
+  const mintingAdapter = useMemo<MintingAdapter>(() => ({
+    account: nftMinting.account,
+    isConnecting: nftMinting.isConnecting,
+    isMinting: nftMinting.isMinting,
+    providerAvailable: nftMinting.providerAvailable,
+    walletError: nftMinting.walletError,
+    mintError: nftMinting.mintError,
+    connectWallet: nftMinting.connectWallet,
+    mintOnChain: nftMinting.mintOnChain,
+  }), [
+    nftMinting.account,
+    nftMinting.isConnecting,
+    nftMinting.isMinting,
+    nftMinting.providerAvailable,
+    nftMinting.walletError,
+    nftMinting.mintError,
+    nftMinting.connectWallet,
+    nftMinting.mintOnChain,
+  ]);
 
   // 初始化示例数据
   useEffect(() => {
@@ -54,7 +82,7 @@ const IODigitalLife = () => {
         content: '当你读到这段话时，我希望你还记得曾经仰望星空时的那份纯真与梦想。时间会改变很多，但请不要忘记最初的自己。',
         visibility: '锁定',
         unlockCondition: '口令',
-        unlockValue: '星辰永恒',
+        unlockValue: '123',
         createdAt: new Date(Date.now() - 86400000).toISOString(),
         hash: '0xabc123def456789',
         isUnlocked: false,
@@ -84,6 +112,23 @@ const IODigitalLife = () => {
     ];
     setFragments(sampleFragments);
   }, []);
+
+  useEffect(() => {
+    if (!nftMinting.walletError) return;
+    toast({
+      title: '钱包连接失败',
+      description: nftMinting.walletError,
+      variant: 'destructive',
+    });
+  }, [nftMinting.walletError, toast]);
+
+  useEffect(() => {
+    if (!nftMinting.account) return;
+    toast({
+      title: '钱包已连接',
+      description: `当前地址：${shortenAddress(nftMinting.account)}`,
+    });
+  }, [nftMinting.account, toast]);
 
   const handleSectionClick = (section: string) => {
     setActiveSection(section);
@@ -156,7 +201,10 @@ const IODigitalLife = () => {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <CosmicBackground />
-      <Navigation activeSection={activeSection} onSectionClick={handleSectionClick} />
+      <Navigation 
+        activeSection={activeSection} 
+        onSectionClick={handleSectionClick}
+      />
       
       {/* Hero Section */}
       <section id="hero" className="relative min-h-screen flex items-center justify-center px-4">
@@ -199,11 +247,38 @@ const IODigitalLife = () => {
               了解价值主张
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
+            <Button
+              onClick={() => {
+                if (!nftMinting.account && !nftMinting.isConnecting) {
+                  void nftMinting.connectWallet().catch((error) => {
+                    alert(error instanceof Error ? error.message : '连接钱包失败，请稍后再试。');
+                  });
+                }
+              }}
+              disabled={nftMinting.isConnecting}
+              variant={nftMinting.account ? 'default' : 'outline'}
+              className={`text-lg px-8 py-4 flex items-center justify-center gap-2 transition-all ${nftMinting.account
+                ? 'btn-cosmic text-foreground shadow-starlight'
+                : 'border-starlight-gold/40 text-starlight hover:border-starlight-gold'
+              } ${nftMinting.isConnecting ? 'opacity-80 cursor-progress' : ''}`}
+            >
+              {nftMinting.account ? (
+                <>
+                  <Check className="w-5 h-5" />
+                  <span>已连接 {shortenAddress(nftMinting.account)}</span>
+                </>
+              ) : (
+                <>
+                  <Wallet className="w-5 h-5" />
+                  <span>{nftMinting.providerAvailable ? (nftMinting.isConnecting ? '连接中…' : '连接浏览器钱包') : '未检测到浏览器钱包'}</span>
+                </>
+              )}
+            </Button>
           </div>
           
           <div className="mt-12 text-sm text-muted-foreground">
             <Badge variant="outline" className="border-starlight-gold/30">
-              ⚠️ 演示版本 - 所有上链流程均为模拟
+              ⚠️ 铸造操作将发起真实链上交易，请确保网络与合约配置正确
             </Badge>
           </div>
         </div>
@@ -251,7 +326,7 @@ const IODigitalLife = () => {
       <section id="demo" className="py-20 px-4 bg-muted/10">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-starlight">MVP功能演示</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-starlight">功能演示</h2>
             <p className="text-xl text-muted-foreground mb-8">
               体验完整的生命碎片创建、铸造、解锁与融合流程
             </p>
@@ -282,6 +357,24 @@ const IODigitalLife = () => {
                 className="hidden"
               />
             </div>
+          </div>
+
+          <div className="space-y-4 mb-12">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-2xl font-semibold text-starlight">已铸造的生命碎片</h3>
+                <p className="text-sm text-muted-foreground">
+                  最近一次链上铸造会自动记录在此列表。点击“Burn 本地记录”即可移除显示（不会销毁链上资产）。
+                </p>
+              </div>
+              <Badge variant="outline" className="border-starlight/40">
+                {nftMinting.mintedFragments.length ? `共 ${nftMinting.mintedFragments.length} 条记录` : '尚无记录'}
+              </Badge>
+            </div>
+            <MintedFragmentGallery
+              items={nftMinting.mintedFragments}
+              onBurn={nftMinting.burnLocalRecord}
+            />
           </div>
 
           {/* Fragment Grid */}
@@ -392,14 +485,14 @@ const IODigitalLife = () => {
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Star className="w-6 h-6 text-starlight" />
-            <span className="text-xl font-bold text-starlight">IO数字生命档案馆</span>
+            <span className="text-xl font-bold text-starlight">数字生命档案馆</span>
           </div>
           <p className="text-muted-foreground mb-4">
             让每一个生命都如星辰般永恒闪耀
           </p>
           <div className="text-xs text-muted-foreground">
             <Badge variant="outline" className="border-starlight-gold/30">
-              MVP演示版本 - 技术概念验证
+              演示版本 - 技术概念验证
             </Badge>
           </div>
         </div>
@@ -410,6 +503,7 @@ const IODigitalLife = () => {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSave={handleCreateFragment}
+        minting={mintingAdapter}
       />
     </div>
   );
