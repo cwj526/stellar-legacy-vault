@@ -52,6 +52,8 @@ const IODigitalLife = () => {
   const nftMinting = useLifeFragmentNftMinting();
   const { toast } = useToast();
 
+  const heroButtonClass = 'btn-cosmic text-lg px-8 py-4 flex items-center justify-center gap-2 shadow-starlight';
+
   const mintingAdapter = useMemo<MintingAdapter>(() => ({
     account: nftMinting.account,
     isConnecting: nftMinting.isConnecting,
@@ -220,7 +222,7 @@ const IODigitalLife = () => {
             </div>
             
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-              当肉体终将消逝，
+              当肉体终将消逝
               <br />
               <span className="text-starlight">数字生命如星辰永不熄灭</span>
             </h1>
@@ -234,18 +236,17 @@ const IODigitalLife = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               onClick={() => setShowDemo(true)}
-              className="btn-cosmic text-lg px-8 py-4"
+              className={heroButtonClass}
             >
               <Sparkles className="w-5 h-5 mr-2" />
               预约产品演示
             </Button>
             <Button 
               onClick={() => handleSectionClick('values')}
-              variant="outline" 
-              className="text-lg px-8 py-4 border-starlight-gold/30 hover:border-starlight-gold"
+              className={heroButtonClass}
             >
+              <ArrowRight className="w-5 h-5 mr-2" />
               核心价值
-              <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
             <Button
               onClick={() => {
@@ -256,16 +257,12 @@ const IODigitalLife = () => {
                 }
               }}
               disabled={nftMinting.isConnecting}
-              variant={nftMinting.account ? 'default' : 'outline'}
-              className={`text-lg px-8 py-4 flex items-center justify-center gap-2 transition-all ${nftMinting.account
-                ? 'btn-cosmic text-foreground shadow-starlight'
-                : 'border-starlight-gold/40 text-starlight hover:border-starlight-gold'
-              } ${nftMinting.isConnecting ? 'opacity-80 cursor-progress' : ''}`}
+              className={`${heroButtonClass} transition-all ${nftMinting.isConnecting ? 'opacity-80 cursor-progress' : ''}`}
             >
               {nftMinting.account ? (
                 <>
                   <Check className="w-5 h-5" />
-                  <span>已连接 {shortenAddress(nftMinting.account)}</span>
+                  <span>钱包已连接 </span>
                 </>
               ) : (
                 <>
