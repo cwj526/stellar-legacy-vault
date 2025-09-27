@@ -274,7 +274,10 @@ const IODigitalLife = () => {
           </div>
           
           <div className="mt-12 text-sm text-muted-foreground">
-            <Badge variant="outline" className="border-starlight-gold/30">
+            <Badge
+              variant="outline"
+              className="border-starlight-gold/30 text-sm md:text-base px-4 py-2"
+            >
               ⚠️ 铸造操作将发起真实链上交易，请确保网络与合约配置正确
             </Badge>
           </div>
