@@ -53,6 +53,11 @@
     --gradient-cosmos: linear-gradient(135deg, hsl(var(--cosmos-deep)), hsl(var(--cosmos-dark)));
     --gradient-starlight: linear-gradient(45deg, hsl(var(--starlight-gold)), hsl(var(--starlight-warm)));
     --gradient-nebula: linear-gradient(120deg, hsl(var(--nebula-purple)), hsl(var(--nebula-blue)));
+    --gradient-constellation: linear-gradient(135deg,
+      hsl(var(--cosmos-night) / 0.94) 0%,
+      hsl(var(--cosmos-space) / 0.94) 55%,
+      hsl(var(--starlight-gold) / 0.18) 100%
+    );
     --gradient-stellar: radial-gradient(ellipse at center, hsl(var(--starlight-gold) / 0.3), transparent 70%);
     
     /* 阴影与光晕 */
@@ -251,7 +256,7 @@
   
   /* 融合视图 */
   .fusion-view {
-    background: var(--gradient-nebula);
+    background: var(--gradient-constellation);
     background-size: 400% 400%;
     animation: nebulaShift 8s ease-in-out infinite;
   }

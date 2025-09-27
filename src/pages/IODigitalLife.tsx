@@ -237,14 +237,14 @@ const IODigitalLife = () => {
               className="btn-cosmic text-lg px-8 py-4"
             >
               <Sparkles className="w-5 h-5 mr-2" />
-              立即体验MVP演示
+              预约产品演示
             </Button>
             <Button 
               onClick={() => handleSectionClick('values')}
               variant="outline" 
               className="text-lg px-8 py-4 border-starlight-gold/30 hover:border-starlight-gold"
             >
-              了解价值主张
+              核心价值
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
             <Button
@@ -288,34 +288,34 @@ const IODigitalLife = () => {
       <section id="values" className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-starlight">核心价值主张</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-starlight">核心价值</h2>
             <p className="text-xl text-muted-foreground">
-              让数字生命在宇宙中永恒延续，如星辰般被后人仰望
+              让数字生命在宇宙中延续，如星辰般永恒闪耀
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="star-card text-center">
               <Heart className="w-12 h-12 mx-auto mb-4 text-starlight" />
-              <h3 className="text-xl font-semibold mb-3 text-starlight">保存与延续</h3>
+              <h3 className="text-xl font-semibold mb-3 text-starlight">体系化存档</h3>
               <p className="text-muted-foreground">
-                思想、记忆、情感的流转被记录，化作夜空长明之星，让生命的本质得以永续传承
+                覆盖文本、音视频等多模态内容，支持合规留存，让数字生命得以永续传承。
               </p>
             </Card>
             
             <Card className="star-card text-center">
               <Users className="w-12 h-12 mx-auto mb-4 text-starlight" />
-              <h3 className="text-xl font-semibold mb-3 text-starlight">代际共鸣</h3>
+              <h3 className="text-xl font-semibold mb-3 text-starlight">多角色协作</h3>
               <p className="text-muted-foreground">
-                后人可在特定条件下查看、理解与共鸣，如仰望同��片星空，跨越时空的心灵对话
+                支持家庭成员、专业顾问与授权第三方协同管理，实现透明可追溯的跨代沟通。
               </p>
             </Card>
             
             <Card className="star-card text-center">
               <Network className="w-12 h-12 mx-auto mb-4 text-starlight" />
-              <h3 className="text-xl font-semibold mb-3 text-starlight">解锁与融合</h3>
+              <h3 className="text-xl font-semibold mb-3 text-starlight">可信分享</h3>
               <p className="text-muted-foreground">
-                在触发条件下公开、解锁、融合为你的"数字星系"，形成独特的生命星图
+                在触发条件下公开、解锁、融合为你的"数字星系"，形成独特的生命星图。
               </p>
             </Card>
           </div>
@@ -326,9 +326,9 @@ const IODigitalLife = () => {
       <section id="demo" className="py-20 px-4 bg-muted/10">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-starlight">功能演示</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-starlight">功能体验</h2>
             <p className="text-xl text-muted-foreground mb-8">
-              体验完整的生命碎片创建、铸造、解锁与融合流程
+              快速体验生命碎片创建、链上铸造、权限解锁与星座化可视分析的业务闭环
             </p>
             
             <div className="flex flex-wrap gap-4 justify-center">
@@ -362,13 +362,13 @@ const IODigitalLife = () => {
           <div className="space-y-4 mb-12">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h3 className="text-2xl font-semibold text-starlight">已铸造的生命碎片</h3>
+                <h3 className="text-2xl font-semibold text-starlight">链上铸造记录</h3>
                 <p className="text-sm text-muted-foreground">
-                  最近一次链上铸造会自动记录在此列表。点击“Burn 本地记录”即可移除显示（不会销毁链上资产）。
+                  系统将自动同步最近的 NFT 铸造信息。您可随时清理本地展示数据，链上资产与凭证不会受到影响。
                 </p>
               </div>
               <Badge variant="outline" className="border-starlight/40">
-                {nftMinting.mintedFragments.length ? `共 ${nftMinting.mintedFragments.length} 条记录` : '尚无记录'}
+                {nftMinting.mintedFragments.length ? `共 ${nftMinting.mintedFragments.length} 条记录` : '暂无记录'}
               </Badge>
             </div>
             <MintedFragmentGallery
@@ -408,11 +408,11 @@ const IODigitalLife = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             {[
-              { icon: Plus, title: '记录碎片', desc: '创建生命记忆与思考' },
-              { icon: Key, title: '设定条件', desc: '选择可见性与解锁方式' },
-              { icon: Sparkles, title: '铸造资产', desc: '模拟链上铸造流程' },
-              { icon: Clock, title: '条件触发', desc: '解锁并展现内容' },
-              { icon: Star, title: '星辰延续', desc: '融合为数字星座' },
+              { icon: Plus, title: '采集内容', desc: '记录多模态生命碎片，生成专属档案' },
+              { icon: Key, title: '配置策略', desc: '定义访问级别、授权对象与解锁策略' },
+              { icon: Sparkles, title: '链上确权', desc: '铸造独一无二的 NFT 链上资产' },
+              { icon: Clock, title: '智能解锁', desc: '按照时间、口令或多方签名安全释出内容' },
+              { icon: Star, title: '长期支持', desc: '融合数据形成个人与家族的数字星座' },
             ].map((step, index) => (
               <div key={index} className="text-center relative">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-starlight-gold to-nebula-purple flex items-center justify-center">
@@ -434,9 +434,9 @@ const IODigitalLife = () => {
       <section id="architecture" className="py-20 px-4 bg-muted/10">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-starlight">系统架构示意</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-starlight">平台服务</h2>
             <p className="text-xl text-muted-foreground">
-              基于Web3技术栈的去中心化数字生命存储与传承系统
+              数字生命档案馆，构建面向未来的数字生命基础设施
             </p>
           </div>
           
@@ -445,11 +445,11 @@ const IODigitalLife = () => {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
                 <Monitor className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-starlight">前端层</h3>
+              <h3 className="text-xl font-semibold mb-3 text-starlight">交互展示</h3>
               <ul className="text-sm text-muted-foreground space-y-1 text-left">
-                <li>• 生命碎片创建与管理</li>
-                <li>• 星图融合可视化界面</li>
-                <li>• 解锁条件控制面板</li>
+                <li>• 多模态碎片采集与审核</li>
+                <li>• 星图融合可视化分析</li>
+                <li>• 权限策略与解锁配置</li>
               </ul>
             </Card>
             
@@ -457,7 +457,7 @@ const IODigitalLife = () => {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
                 <Shield className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-starlight">中间层</h3>
+              <h3 className="text-xl font-semibold mb-3 text-starlight">系统架构</h3>
               <ul className="text-sm text-muted-foreground space-y-1 text-left">
                 <li>• 加密策略与密钥管理</li>
                 <li>• 解锁条件验证引擎</li>
@@ -469,7 +469,7 @@ const IODigitalLife = () => {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center">
                 <Database className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-starlight">链上层</h3>
+              <h3 className="text-xl font-semibold mb-3 text-starlight">链上存储</h3>
               <ul className="text-sm text-muted-foreground space-y-1 text-left">
                 <li>• NFT元数据与哈希存证</li>
                 <li>• 智能合约事件触发</li>
@@ -482,18 +482,44 @@ const IODigitalLife = () => {
 
       {/* Footer */}
       <footer className="py-12 px-4 border-t border-border/30">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Star className="w-6 h-6 text-starlight" />
-            <span className="text-xl font-bold text-starlight">数字生命档案馆</span>
-          </div>
-          <p className="text-muted-foreground mb-4">
-            让每一个生命都如星辰般永恒闪耀
-          </p>
-          <div className="text-xs text-muted-foreground">
+        <div className="max-w-6xl mx-auto space-y-6 text-center md:text-left">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center justify-center md:justify-start gap-2">
+              <Star className="w-6 h-6 text-starlight" />
+              <span className="text-xl font-bold text-starlight">数字生命档案馆</span>
+            </div>
             <Badge variant="outline" className="border-starlight-gold/30">
-              演示版本 - 技术概念验证
+              产品体验版 · 持续迭代中
             </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground md:max-w-3xl mx-auto md:mx-0">
+            数字生命档案馆由Herstory提供，致力于以合规、安全、智能的方式帮助机构与家族延展数字遗产价值。
+          </p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs text-muted-foreground">
+            <span>© {new Date().getFullYear()} Herstory 版权所有</span>
+            <div className="flex flex-wrap items-center justify-center md:justify-end gap-3">
+              <a
+                href="https://beian.miit.gov.cn"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-starlight transition-colors"
+              >
+                沪ICP备20240001号-1
+              </a>
+              <span>数据安全与隐私合规承诺</span>
+              <a
+                href="/privacy.html"
+                className="hover:text-starlight transition-colors"
+              >
+                隐私政策
+              </a>
+              <a
+                href="/terms.html"
+                className="hover:text-starlight transition-colors"
+              >
+                服务协议
+              </a>
+            </div>
           </div>
         </div>
       </footer>

@@ -59,7 +59,7 @@ export const MintedFragmentGallery = ({ items, onBurn }: MintedFragmentGalleryPr
               onClick={() => onBurn(item.id)}
             >
               <Flame className="w-4 h-4 mr-1" />
-              Burn 本地记录
+              删除本地记录
             </Button>
           </div>
 

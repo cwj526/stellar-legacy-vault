@@ -15,10 +15,10 @@ export const Navigation = ({
 
   const navItems = [
     { id: 'hero', label: '首页', icon: Star },
-    { id: 'values', label: '价值主张', icon: Sparkles },
-    { id: 'demo', label: '功能演示', icon: Sparkles },
+    { id: 'values', label: '核心价值', icon: Sparkles },
+    { id: 'demo', label: '功能体验', icon: Sparkles },
     { id: 'process', label: '用户流程', icon: Sparkles },
-    { id: 'architecture', label: '示意图', icon: Sparkles },
+    { id: 'architecture', label: '平台服务', icon: Sparkles },
   ];
 
   const handleSectionClick = (sectionId: string) => {
