@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import imageCompression from 'browser-image-compression';
+import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -67,6 +69,9 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave, minting }: Create
   const [progressMessage, setProgressMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shouldMint, setShouldMint] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const isBusy = isSubmitting || Boolean(minting?.isMinting);
 
@@ -80,12 +85,12 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave, minting }: Create
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.content) {
-      alert('请填写完整信息');
+      toast({ title: '请填写完整信息', variant: 'destructive' });
       return;
     }
 
     if (shouldMint && !minting) {
-      alert('未加载 NFT 铸造功能，请稍后重试。');
+      toast({ title: '未加载 NFT 铸造功能，请稍后重试。', variant: 'destructive' });
       return;
     }
 
@@ -120,10 +125,13 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave, minting }: Create
       setMintingProgress(0);
       setProgressMessage('');
       setShouldMint(false);
+      setImagePreview(null);
+      setUploadError(null);
       onClose();
+      toast({ title: shouldMint ? '铸造完成' : '保存成功' });
     } catch (error) {
       const message = error instanceof Error ? error.message : '操作失败，请稍后再试。';
-      alert(message);
+      toast({ title: message, variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
     }
@@ -131,8 +139,80 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave, minting }: Create
 
   const handleClose = () => {
     if (!isBusy) {
+      setImagePreview(null);
+      setUploadError(null);
       onClose();
     }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    await handleFileUpload(files);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    await handleFileUpload(files);
+  };
+
+  const handleFileUpload = async (files: File[]) => {
+    if (files.length === 0) return;
+    
+    const file = files[0];
+    
+    // 检查文件类型
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setUploadError('仅支持 JPEG/PNG/GIF/WebP 格式的图片');
+      return;
+    }
+    
+    // 检查文件大小
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      setUploadError('图片大小不能超过 5MB');
+      return;
+    }
+    
+    try {
+      setUploadError(null);
+      
+      // 压缩图片
+      const compressedFile = await imageCompression(file, {
+        maxSizeMB: 5,
+        maxWidthOrHeight: 1024,
+        useWebWorker: true
+      });
+      
+      // 转换为 Base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Data = reader.result as string;
+        setFormData(prev => ({ ...prev, content: base64Data }));
+        setImagePreview(base64Data);
+      };
+      reader.readAsDataURL(compressedFile);
+    } catch (error) {
+      setUploadError('图片处理失败，请稍后重试');
+      console.error('Image upload error:', error);
+    }
+  };
+
+  const clearImage = () => {
+    setFormData(prev => ({ ...prev, content: '' }));
+    setImagePreview(null);
+    setUploadError(null);
   };
 
   return (
@@ -163,9 +243,14 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave, minting }: Create
               <Label htmlFor="type">内容类型</Label>
               <Select 
                 value={formData.type}
-                onValueChange={(value) => 
-                  setFormData({ ...formData, type: value as '文本' | '图片' | '音频' | '视频' })
-                }
+                onValueChange={(value) => {
+                  const newType = value as '文本' | '图片' | '音频' | '视频';
+                  setFormData({ ...formData, type: newType, content: '' });
+                  if (newType !== '图片') {
+                    setImagePreview(null);
+                    setUploadError(null);
+                  }
+                }}
                 disabled={isBusy}
               >
                 <SelectTrigger className="bg-input/50">
@@ -193,6 +278,59 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave, minting }: Create
                 className="bg-input/50"
                 disabled={isBusy}
               />
+            ) : formData.type === '图片' ? (
+              <>
+                {imagePreview ? (
+                  <div className="relative rounded-lg overflow-hidden border border-border">
+                    <img
+                      src={imagePreview}
+                      alt="预览"
+                      className="w-full h-48 object-cover"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={clearImage}
+                      disabled={isBusy}
+                    >
+                      移除
+                    </Button>
+                  </div>
+                ) : (
+                  <div
+                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${isDragging ? 'border-primary bg-primary/5' : 'border-border'}`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground mb-2">
+                      拖拽图片到此处或
+                    </p>
+                    <label htmlFor="image-upload" className="cursor-pointer">
+                      <Button type="button" variant="outline" size="sm" disabled={isBusy}>
+                        选择文件
+                      </Button>
+                      <input
+                        id="image-upload"
+                        type="file"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        className="hidden"
+                        onChange={handleFileChange}
+                        disabled={isBusy}
+                      />
+                    </label>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      支持 JPEG/PNG/GIF/WebP 格式，大小不超过 5MB
+                    </p>
+                  </div>
+                )}
+                {uploadError && (
+                  <p className="text-sm text-destructive mt-2">{uploadError}</p>
+                )}
+              </>
             ) : (
               <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
                 <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
