@@ -65,7 +65,7 @@ export const MintedFragmentGallery = ({ items, onBurn }: MintedFragmentGalleryPr
           </div>
 
           {/* 判断内容是否为图片 */}
-          {item.text.startsWith('data:image/') ? (
+          {typeof item.text === 'string' && item.text.startsWith('data:image/') ? (
             <div className="rounded-lg overflow-hidden border border-border/50">
               <img
                 src={item.text}

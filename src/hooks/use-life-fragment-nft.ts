@@ -243,8 +243,8 @@ export const useLifeFragmentNftMinting = () => {
         throw new Error('请先连接钱包再尝试铸造 NFT。');
       }
 
-      if (!LIFE_FRAGMENT_NFT_CONTRACT_ADDRESS) {
-        throw new Error('尚未配置合约地址，请在 nft-config.ts 或环境变量中设置。');
+      if (!LIFE_FRAGMENT_NFT_CONTRACT_ADDRESS || LIFE_FRAGMENT_NFT_CONTRACT_ADDRESS === '0x008985a1B4415794277De116A7e75A3C531Da5C9') {
+        throw new Error('请配置正确的合约地址。默认地址可能不正确。');
       }
 
       // 检查网络是否为 Sepolia
@@ -264,6 +264,9 @@ export const useLifeFragmentNftMinting = () => {
 
         onProgress?.({ progress: 25, message: '预估 Gas 费用...' });
         const contract = new Contract(LIFE_FRAGMENT_NFT_CONTRACT_ADDRESS, LIFE_FRAGMENT_NFT_ABI, signer);
+        console.log('Contract address:', LIFE_FRAGMENT_NFT_CONTRACT_ADDRESS);
+        console.log('Text length:', text.length);
+        console.log('Text:', text);
         
         // Gas 预估
         const gasEstimate = await contract.mint.estimateGas(text);
@@ -272,7 +275,8 @@ export const useLifeFragmentNftMinting = () => {
         console.log('Estimated Gas Cost:', estimatedCost.toString());
 
         onProgress?.({ progress: 40, message: '提交铸造交易...' });
-        const tx = await contract.mint(text);
+        // 添加200%的Gas缓冲以确保大型Base64图片数据的交易能够成功完成
+        const tx = await contract.mint(text, { gasLimit: gasEstimate.mul(3) });
 
         onProgress?.({ progress: 70, message: '等待交易确认...' });
         const receipt = await tx.wait();
@@ -312,6 +316,7 @@ export const useLifeFragmentNftMinting = () => {
         onProgress?.({ progress: 100, message: '铸造完成' });
         return minted;
       } catch (error) {
+        console.error('Minting error:', error);
         const message = error instanceof Error ? error.message : '铸造失败，请稍后再试。';
         setMintError(message);
         throw new Error(message);

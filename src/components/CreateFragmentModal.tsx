@@ -172,9 +172,9 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave, minting }: Create
     const file = files[0];
     
     // 检查文件类型
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const allowedTypes = ['image/jpeg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
-      setUploadError('仅支持 JPEG/PNG/GIF/WebP 格式的图片');
+      setUploadError('仅支持 JPEG/PNG 格式的图片');
       return;
     }
     
@@ -188,17 +188,34 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave, minting }: Create
     try {
       setUploadError(null);
       
-      // 压缩图片
+      // 压缩图片 - 限制在30KB以内以确保Base64数据不会超过以太坊交易大小限制
       const compressedFile = await imageCompression(file, {
-        maxSizeMB: 5,
-        maxWidthOrHeight: 1024,
-        useWebWorker: true
+        maxSizeMB: 0.03,
+        maxWidthOrHeight: 250,
+        useWebWorker: true,
+        convertSize: 10000, // Convert to JPEG if file is larger than 10KB
+        fileType: 'image/jpeg'
       });
+      console.log('Original file:', file);
+      console.log('Compressed file:', compressedFile);
       
       // 转换为 Base64
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64Data = reader.result as string;
+        
+        // 移除Base64前缀以计算实际数据大小
+        const base64WithoutPrefix = base64Data.replace(/^data:image\/[a-z]+;base64,/i, '');
+        // Base64编码后，每4个字符代表3个字节
+        const actualDataSize = (base64WithoutPrefix.length * 3) / 4;
+        
+        // 检查实际数据大小（以太坊交易大小限制约为100KB）
+        if (actualDataSize > 100 * 1024) {
+          setUploadError('图片过大，请选择更小的图片');
+          return;
+        }
+        
+        // 保留完整的Base64前缀，智能合约需要它来正确显示图片
         setFormData(prev => ({ ...prev, content: base64Data }));
         setImagePreview(base64Data);
       };
@@ -316,15 +333,15 @@ export const CreateFragmentModal = ({ isOpen, onClose, onSave, minting }: Create
                       <input
                         id="image-upload"
                         type="file"
-                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        accept="image/jpeg,image/png"
                         className="hidden"
                         onChange={handleFileChange}
                         disabled={isBusy}
                       />
                     </label>
                     <p className="text-xs text-muted-foreground mt-2">
-                      支持 JPEG/PNG/GIF/WebP 格式，大小不超过 5MB
-                    </p>
+                        支持 JPEG/PNG 格式，大小不超过 5MB
+                      </p>
                   </div>
                 )}
                 {uploadError && (
