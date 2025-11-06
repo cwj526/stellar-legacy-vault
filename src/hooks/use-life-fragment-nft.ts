@@ -243,8 +243,15 @@ export const useLifeFragmentNftMinting = () => {
         throw new Error('请先连接钱包再尝试铸造 NFT。');
       }
 
-      if (!LIFE_FRAGMENT_NFT_CONTRACT_ADDRESS) {
-        throw new Error('尚未配置合约地址，请在 nft-config.ts 或环境变量中设置。');
+      if (!LIFE_FRAGMENT_NFT_CONTRACT_ADDRESS || LIFE_FRAGMENT_NFT_CONTRACT_ADDRESS === '0x008985a1B4415794277De116A7e75A3C531Da5C9') {
+        throw new Error('请配置正确的合约地址。默认地址可能不正确。');
+      }
+
+      // 检查网络是否为 Sepolia
+      const currentChainId = await injected.request({ method: 'eth_chainId' });
+      const SEPOLIA_CHAIN_ID = '0xaa36a7'; // 11155111 in hex
+      if (currentChainId !== SEPOLIA_CHAIN_ID) {
+        throw new Error('请切换到 Sepolia 测试网络');
       }
 
       setIsMinting(true);
@@ -255,9 +262,21 @@ export const useLifeFragmentNftMinting = () => {
         const providerInstance = new BrowserProvider(injected);
         const signer = await providerInstance.getSigner();
 
-        onProgress?.({ progress: 40, message: '提交铸造交易...' });
+        onProgress?.({ progress: 25, message: '预估 Gas 费用...' });
         const contract = new Contract(LIFE_FRAGMENT_NFT_CONTRACT_ADDRESS, LIFE_FRAGMENT_NFT_ABI, signer);
-        const tx = await contract.mint(text);
+        console.log('Contract address:', LIFE_FRAGMENT_NFT_CONTRACT_ADDRESS);
+        console.log('Text length:', text.length);
+        console.log('Text:', text);
+        
+        // Gas 预估
+        const gasEstimate = await contract.mint.estimateGas(text);
+        const gasPrice = await providerInstance.getGasPrice();
+        const estimatedCost = gasEstimate * gasPrice;
+        console.log('Estimated Gas Cost:', estimatedCost.toString());
+
+        onProgress?.({ progress: 40, message: '提交铸造交易...' });
+        // 添加200%的Gas缓冲以确保大型Base64图片数据的交易能够成功完成
+        const tx = await contract.mint(text, { gasLimit: gasEstimate.mul(3) });
 
         onProgress?.({ progress: 70, message: '等待交易确认...' });
         const receipt = await tx.wait();
@@ -297,6 +316,7 @@ export const useLifeFragmentNftMinting = () => {
         onProgress?.({ progress: 100, message: '铸造完成' });
         return minted;
       } catch (error) {
+        console.error('Minting error:', error);
         const message = error instanceof Error ? error.message : '铸造失败，请稍后再试。';
         setMintError(message);
         throw new Error(message);
@@ -310,6 +330,33 @@ export const useLifeFragmentNftMinting = () => {
   const burnLocalRecord = useCallback((id: string) => {
     setMintedFragments((prev) => prev.filter((item) => item.id !== id));
   }, []);
+
+  const getNftDetails = useCallback(async (tokenId: string) => {
+    if (!LIFE_FRAGMENT_NFT_CONTRACT_ADDRESS) {
+      throw new Error('尚未配置合约地址，请在 nft-config.ts 或环境变量中设置。');
+    }
+
+    const injected = await waitForProvider();
+    if (!injected) {
+      throw new Error('未检测到浏览器钱包，请确认钱包插件已就绪。');
+    }
+
+    try {
+      const providerInstance = new BrowserProvider(injected);
+      const contract = new Contract(LIFE_FRAGMENT_NFT_CONTRACT_ADDRESS, LIFE_FRAGMENT_NFT_ABI, providerInstance);
+      
+      // 获取 tokenURI
+      const tokenUri = await contract.tokenURI(tokenId);
+      
+      // 获取 ownerOf
+      const owner = await contract.ownerOf(tokenId);
+      
+      return { tokenUri, owner };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '获取 NFT 详情失败';
+      throw new Error(message);
+    }
+  }, [waitForProvider]);
 
   const providerAvailable = Boolean(provider || providerRef.current);
 
@@ -327,6 +374,7 @@ export const useLifeFragmentNftMinting = () => {
     connectWallet,
     mintOnChain,
     burnLocalRecord,
+    getNftDetails,
   };
 };
 

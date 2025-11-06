@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { ExternalLink } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -63,9 +64,20 @@ export const MintedFragmentGallery = ({ items, onBurn }: MintedFragmentGalleryPr
             </Button>
           </div>
 
-          <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap break-words">
-            {item.text}
-          </p>
+          {/* 判断内容是否为图片 */}
+          {typeof item.text === 'string' && item.text.startsWith('data:image/') ? (
+            <div className="rounded-lg overflow-hidden border border-border/50">
+              <img
+                src={item.text}
+                alt="生命碎片"
+                className="w-full h-48 object-cover"
+              />
+            </div>
+          ) : (
+            <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap break-words">
+              {item.text}
+            </p>
+          )}
 
           <div className="space-y-2 text-xs text-muted-foreground break-words">
             <div className="flex justify-between gap-2">
@@ -88,6 +100,15 @@ export const MintedFragmentGallery = ({ items, onBurn }: MintedFragmentGalleryPr
                   className="h-7 w-7"
                 >
                   <ClipboardCopy className="w-4 h-4" />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => window.open(`https://sepolia.etherscan.io/tx/${item.txHash}`, '_blank')}
+                  className="h-7 w-7"
+                >
+                  <ExternalLink className="w-4 h-4" />
                 </Button>
               </div>
             </div>

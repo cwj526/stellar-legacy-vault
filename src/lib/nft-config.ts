@@ -7,5 +7,7 @@ export const LIFE_FRAGMENT_NFT_CONTRACT_ADDRESS =
 
 export const LIFE_FRAGMENT_NFT_ABI = [
   'function mint(string answer) public returns (uint256)',
+  'function tokenURI(uint256 tokenId) public view returns (string memory)',
+  'function ownerOf(uint256 tokenId) public view returns (address)',
   'event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)'
 ];
